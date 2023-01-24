@@ -1,19 +1,21 @@
-const jwt = require('jsonwebtoken');
-const { secret } = require('../config/vars.js');
-const db = require('../models/index.js');
+const jwt = require("jsonwebtoken");
+const { secret } = require("../config/vars.js");
+const axios = require("axios");
+const db = require("../models/index.js");
+const imageUrl = "http://localhost:5000/";
 const { sequelize } = db;
 const { models } = sequelize;
 const { UserLeave, LeaveType, Salary, RequestedLeave } = models;
 
 exports.isSignedIn = (req, res, next) => {
   try {
-    const token = req.headers.authorization.split(' ')[1];
+    const token = req.headers.authorization.split(" ")[1];
     const user = jwt.verify(token, secret);
     req.user = user;
     next();
   } catch (err) {
     console.log(err);
-    return res.status(400).json({ error: 'You are not signed in.' });
+    return res.status(400).json({ error: "You are not signed in.", code: 1 });
   }
 };
 exports.isAuthenticated = (req, res, next) => {
@@ -23,24 +25,24 @@ exports.isAuthenticated = (req, res, next) => {
       req.user.id == req.body.id &&
       req.body.company_id == req.user.company_id;
     if (!user) {
-      return res.status(400).json({ error: 'Access Denied.' });
+      return res.status(400).json({ error: "Access Denied." });
     }
     next();
   } catch (err) {
     console.log(err);
-    return res.status(400).json({ error: 'Authorization required.' });
+    return res.status(400).json({ error: "Authorization required." });
   }
 };
 exports.isAdmin = (req, res, next) => {
   try {
     const user = req.user;
-    if (user.role !== 'ADMIN') {
-      return res.status(400).json({ error: 'Admin permission required.' });
+    if (user.role !== "ADMIN") {
+      return res.status(400).json({ error: "Admin permission required." });
     }
     next();
   } catch (err) {
     console.log(err);
-    return res.status(400).json({ error: 'Authorization required.' });
+    return res.status(400).json({ error: "Authorization required." });
   }
 };
 
@@ -52,7 +54,7 @@ exports.getAllLeave = async (req, res) => {
       include: [
         {
           model: LeaveType,
-          as: 'leave_type',
+          as: "leave_type",
         },
       ],
     });
@@ -71,7 +73,7 @@ exports.getAllLeave = async (req, res) => {
           used: 0,
           assigned: leave.assigned + leave.assigned - leave.used,
           from: new Date(),
-          to: new Date().getFullYear() + '-' + 12 + '-' + 31,
+          to: new Date().getFullYear() + "-" + 12 + "-" + 31,
         };
         return obj;
       });
@@ -81,7 +83,7 @@ exports.getAllLeave = async (req, res) => {
         include: [
           {
             model: LeaveType,
-            as: 'leave_type',
+            as: "leave_type",
           },
         ],
       });
@@ -93,7 +95,7 @@ exports.getAllLeave = async (req, res) => {
     return res.json(output);
   } catch (err) {
     console.log(err);
-    return res.json({ error: 'Failed to get Leaves' });
+    return res.json({ error: "Failed to get Leaves" });
   }
 };
 
@@ -108,7 +110,7 @@ exports.takeLeave = async (req, res) => {
       raw: true,
     });
     if (!userAvailabeLeave || userAvailabeLeave.length == 0) {
-      return res.status(400).json({ error: 'This Leave has been expired.' });
+      return res.status(400).json({ error: "This Leave has been expired." });
     }
     const prevYearLeave = userAvailabeLeave.filter(
       (leave) => +leave.to.substring(0, 4) == new Date().getFullYear() - 1
@@ -127,16 +129,16 @@ exports.takeLeave = async (req, res) => {
           prevYearLeave[0].assigned -
           prevYearLeave[0].used,
         from: new Date(),
-        to: new Date().getFullYear() + '-' + 12 + '-' + 31,
+        to: new Date().getFullYear() + "-" + 12 + "-" + 31,
       });
       userAvailabeLeave = data.dataValues;
     } else userAvailabeLeave = userAvailabeLeave[0];
     if (userAvailabeLeave.used + numberOfDays > userAvailabeLeave.assigned) {
       return res.json({
         error:
-          'You can only take upto ' +
+          "You can only take upto " +
           (userAvailabeLeave.assigned - userAvailabeLeave.used) +
-          ' leaves',
+          " leaves",
       });
     }
     const data = await sequelize.transaction(async (t) => {
@@ -158,10 +160,10 @@ exports.takeLeave = async (req, res) => {
       );
       return { updatedUserLeave, requestLeave };
     });
-    return res.json(data);
+    return res.json({ data, msg: "Leave request has been successfully made." });
   } catch (err) {
     console.log(err);
-    return res.json('Oops something went wrong');
+    return res.json("Oops something went wrong");
   }
 };
 
@@ -173,27 +175,48 @@ exports.getRequestedLeave = async (req, res) => {
       include: [
         {
           model: LeaveType,
-          as: 'leave_type',
+          as: "leave_type",
         },
       ],
     });
+    const urls = await Promise.all(
+      output.map((cur) => {
+        var config = {
+          method: "post",
+          url: imageUrl + "signed-url/",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          data: JSON.stringify({ Key: cur.dataValues.attachment }),
+        };
+        return axios(config)
+          .then((data) => data.data.url)
+          .catch(function (error) {
+            throw error;
+          });
+      })
+    );
+    console.log(urls);
+    for (let i = 0; i < output.length; i++) {
+      output[i].dataValues.attachment = urls[i];
+    }
     return res.json(output);
   } catch (err) {
     console.log(err);
-    return res.json({ error: 'Failed to fetch Requested Leaves' });
+    return res.json({ error: "Failed to fetch Requested Leaves" });
   }
 };
 
 exports.isManager = (req, res, next) => {
   try {
     const user = req.user;
-    if (user.role !== 'MANAGER') {
-      return res.status(400).json({ error: 'Manager permission required.' });
+    if (user.role !== "MANAGER") {
+      return res.status(400).json({ error: "Manager permission required." });
     }
     next();
   } catch (err) {
     console.log(err);
-    return res.status(400).json({ error: 'Authorization required.' });
+    return res.status(400).json({ error: "Authorization required." });
   }
 };
 
@@ -204,6 +227,6 @@ exports.getSalary = async (req, res) => {
     return res.json(data);
   } catch (err) {
     console.log(err);
-    return res.json({ error: 'Failed to get Salary' });
+    return res.json({ error: "Failed to get Salary" });
   }
 };

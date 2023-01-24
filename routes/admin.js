@@ -1,4 +1,4 @@
-const express = require('express');
+const express = require("express");
 const {
   getEducationDetails,
   getKycDetails,
@@ -8,55 +8,65 @@ const {
   changeLeaveStatus,
   addSalaryOfOneEmployee,
   getSalaryOFEmployee,
-} = require('../controllers/admin.js');
+  getAllKycDetails,
+  updateKyc,
+} = require("../controllers/admin.js");
 
 const {
   isSignedIn,
   isAuthenticated,
   isAdmin,
-} = require('../controllers/user.js');
+} = require("../controllers/user.js");
 const router = express.Router();
 
 router.post(
-  '/education',
+  "/education",
   isSignedIn,
   isAuthenticated,
   isAdmin,
   getEducationDetails
 );
-router.post('/kyc', isSignedIn, isAuthenticated, isAdmin, getKycDetails);
+router.post("/kyc", isSignedIn, isAuthenticated, isAdmin, getKycDetails);
+router.post("/update/kyc", isSignedIn, isAuthenticated, isAdmin, updateKyc);
 router.post(
-  '/address',
+  "/all/kycDetails",
+  isSignedIn,
+  isAuthenticated,
+  isAdmin,
+  getAllKycDetails
+);
+router.post(
+  "/address",
   isSignedIn,
   isAuthenticated,
   isAdmin,
   getAddressDetails
 );
 router.post(
-  '/acccountDetails',
+  "/acccountDetails",
   isSignedIn,
   isAuthenticated,
   isAdmin,
   getAccountDetails
 );
-router.post('/leave/see', isSignedIn, isAuthenticated, isAdmin, getAllLeaves);
+router.post("/leave/see", isSignedIn, isAuthenticated, isAdmin, getAllLeaves);
 
 router.post(
-  '/leave/changestatus',
+  "/leave/changestatus",
   isSignedIn,
   isAuthenticated,
   isAdmin,
   changeLeaveStatus
 );
 router.post(
-  '/salary/add',
+  "/salary/add",
   isSignedIn,
   isAuthenticated,
   isAdmin,
   addSalaryOfOneEmployee
 );
 router.post(
-  '/salary/see',
+  "/salary/see",
   isSignedIn,
   isAuthenticated,
   isAdmin,
