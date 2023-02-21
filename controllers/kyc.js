@@ -2,7 +2,7 @@ const db = require("../models/index.js");
 const axios = require("axios");
 const { sequelize } = db;
 const { models } = sequelize;
-const imageUrl = "http://localhost:5000/";
+const { imageUrl } = require("../config/vars");
 const { Education, Address, AccountDetails, Kyc } = models;
 
 exports.kyc = async (req, res) => {
@@ -50,7 +50,7 @@ exports.getKycDetails = async (req, res) => {
     const { id } = req.body;
     const data = await Kyc.findOne({ where: { user_id: id } });
     if (!data) {
-      return res.json({});
+      return res.json(null);
     }
     console.log(data);
     let urls = [

@@ -4,7 +4,7 @@ const { sequelize } = db;
 const { models } = sequelize;
 const { Op } = Sequelize;
 const axios = require("axios");
-const imageUrl = "http://localhost:5000/";
+const { imageUrl } = require("../config/vars");
 const {
   Education,
   User,

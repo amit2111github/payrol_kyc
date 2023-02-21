@@ -1,7 +1,7 @@
-const db = require('../models/index.js');
+const db = require("../models/index.js");
 const { sequelize } = db;
 const { models } = sequelize;
-console.log(models);
+// console.log(models);
 const { Education } = models;
 exports.getEducationDetails = async (req, res) => {
   try {
@@ -10,6 +10,6 @@ exports.getEducationDetails = async (req, res) => {
     return res.json(data);
   } catch (err) {
     console.log(err);
-    return res.json({ error: 'Failed to get Education Details' });
+    return res.json({ error: "Failed to get Education Details" });
   }
 };

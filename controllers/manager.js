@@ -1,5 +1,5 @@
-const { Sequelize } = require('../models/index.js');
-const db = require('../models/index.js');
+const { Sequelize } = require("../models/index.js");
+const db = require("../models/index.js");
 const { sequelize } = db;
 const { Op } = Sequelize;
 const { models } = sequelize;
@@ -12,7 +12,7 @@ exports.getAllLeaves = async (req, res) => {
     const allUser = await User.findAll({
       raw: true,
       where: { department_id: did },
-      attributes: ['id'],
+      attributes: ["id"],
     });
     let output = [];
     allUser.forEach((user) => {
@@ -22,14 +22,14 @@ exports.getAllLeaves = async (req, res) => {
     const leaves = await RequestedLeave.findAll({
       where: { user_id: { [Op.in]: output } },
       include: [
-        { model: User, as: 'user' },
-        { model: LeaveType, as: 'leave_type' },
+        { model: User, as: "user" },
+        { model: LeaveType, as: "leave_type" },
       ],
     });
     return res.json(leaves);
   } catch (err) {
     console.log(err);
-    return res.json({ error: 'Oops failed to get requested leaves' });
+    return res.json({ error: "Oops failed to get requested leaves" });
   }
 };
 
@@ -38,11 +38,11 @@ exports.changeLeaveStatus = async (req, res) => {
     const { requestedLeaveId, status, rejection_reason } = req.body;
     const data = await RequestedLeave.update(
       { status, rejection_reason: rejection_reason ? rejection_reason : null },
-      { where: { id: requestedLeaveId, status: { [Op.ne]: 'approved' } } }
+      { where: { id: requestedLeaveId, status: { [Op.ne]: "approved" } } }
     );
-    return res.json({ msg: 'Status Changed Successfully' });
+    return res.json({ msg: "Status Changed Successfully" });
   } catch (err) {
     console.log(err);
-    return res.json({ error: 'Oops something went wrong' });
+    return res.json({ error: "Oops something went wrong" });
   }
 };

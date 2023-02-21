@@ -26,6 +26,9 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
+app.get("/test", (req, res) => {
+  return res.send("Working fine.");
+});
 app.use("/kyc", kycRouter);
 app.use("/admin", adminRouter);
 app.use("/user", userRouter);
